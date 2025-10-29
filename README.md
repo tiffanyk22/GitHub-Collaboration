@@ -4,7 +4,7 @@ A **Hotel Room Reservation Management System** built with **Laravel** that allow
 
 ---
 
-## 🏨 Description / Overview
+##  Description / Overview
 
 This project is a **web-based Room Reservation System** designed for hotel management operations. The system is **admin-exclusive**, meaning only authorized administrators can access it. Admins can:
 
