@@ -180,14 +180,13 @@ ROOMRESERVATION/
 ## 📸 Screenshots
 
 ### Rooms Management Page
-*[Add screenshot: rooms.png]*
-![Rooms Page](roomList.png)
+![Rooms Page](RoomList.png)
 
 ### Add New Room Form
 ![Add Room](AddRoom.png)
 
 ### Reservations Management Page
-![Reservations Page](Reservations.png)
+![Reservations Page](Reservation.png)
 
 ### Add New Reservation Form
 ![Add Reservation](AddReservations.png)
