@@ -423,8 +423,7 @@ return new class extends Migration
 
 ## 🤝 Contributors
 
-- **Full Name:** Tiffany Kyle Olivar
-- **Student ID:** 221-0123-2
+- **Names:** Tiffany Kyle Olivar and Vhianzhy Xuivern Dumpit
 - **Section:** 4-B
 
 ---
