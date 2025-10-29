@@ -35,9 +35,9 @@ It demonstrates key **CRUD functionalities** using Laravel's MVC architecture an
 | **Room Management (CRUD)** | Add, edit, view, or delete room records with full details. |
 | **Reservation Management** | Admin can create, view, update, and cancel guest reservations. |
 | **Database Migrations** | Structured database schema using Laravel migrations. |
-| **Eloquent Relationships** | Proper model relationships between rooms, reservations, and users. |
+| **Eloquent Relationships** | Defines relationships between the Room and Reservation models (One-to-Many).|
 | **Validation** | Server-side validation for room details and reservation forms. |
-| **Responsive UI** | Clean interface built with CSS and Bootstrap adaptable for desktops and mobile. |
+| **Responsive UI** | Clean interface built with CSS |
 | **Database Integration** | Fully integrated with MySQL for persistent data storage. |
 
 ---
@@ -109,7 +109,6 @@ It demonstrates key **CRUD functionalities** using Laravel's MVC architecture an
 
 ## 📂 Project Structure
 
-Based on the project files shown:
 ```
 ROOMRESERVATION/
 │
@@ -167,38 +166,31 @@ ROOMRESERVATION/
 ### **Rooms Section (`/rooms`)**
 - **View All Rooms:** Display list of all hotel rooms with details.
 - **Add Room:** Click "Add Room" button to create a new room entry.
-- **Edit Room:** Click "Edit" to modify room details (room number, type, price, status).
+- **Edit and Update Room:** Click "Edit" to modifyand update room details (room number, type, price, status).
 - **Delete Room:** Click "Delete" to remove a room from the system.
 
 ### **Reservations Section (`/reservations`)**
 - **View All Reservations:** Display list of all guest reservations.
 - **Add Reservation:** Click "Add Reservation" to create a new booking (select room, guest details, check-in/out dates).
-- **Edit Reservation:** Click "Edit" to update reservation details.
+- **Edit and Update Reservation:** Click "Edit" to update reservation details.
 - **Cancel Reservation:** Click "Cancel" or "Delete" to remove a booking.
 
 ---
 
 ## 📸 Screenshots
 
-### Home Page (Dashboard Overview)
-*[Add screenshot: home.png]*
-![Home Page](screenshots/home.png)
-
 ### Rooms Management Page
 *[Add screenshot: rooms.png]*
-![Rooms Page](screenshots/rooms.png)
+![Rooms Page](roomList.png)
 
 ### Add New Room Form
-*[Add screenshot: create-room.png]*
-![Add Room](screenshots/create-room.png)
+![Add Room](AddRoom.png)
 
 ### Reservations Management Page
-*[Add screenshot: reservations.png]*
-![Reservations Page](screenshots/reservations.png)
+![Reservations Page](Reservations.png)
 
 ### Add New Reservation Form
-*[Add screenshot: create-reservation.png]*
-![Add Reservation](screenshots/create-reservation.png)
+![Add Reservation](AddReservations.png)
 
 ---
 
@@ -214,15 +206,15 @@ This snippet shows the Room model with fillable attributes and relationship to r
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Room extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
-        'room_number',
-        'room_type',
-        'price',
-        'status'
+        'roomNumber', 'type', 'capacity', 'pricePerNight', 'status'
     ];
 
     public function reservations()
@@ -244,17 +236,19 @@ This snippet shows the Reservation model and its relationship to the Room model.
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Reservation extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'room_id',
-        'guest_name',
-        'guest_email',
-        'check_in_date',
-        'check_out_date',
-        'status'
+        'guestName',
+        'guestEmail',
+        'checkInDate',
+        'checkOutDate'
     ];
 
     public function room()
@@ -262,6 +256,7 @@ class Reservation extends Model
         return $this->belongsTo(Room::class);
     }
 }
+
 ```
 
 ---
@@ -285,20 +280,49 @@ class RoomController extends Controller
         return view('rooms.index', compact('rooms'));
     }
 
+    public function create()
+    {
+        return view('rooms.create');
+    }
+
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'room_number' => 'required|unique:rooms',
-            'room_type' => 'required|string',
-            'price' => 'required|numeric|min:0',
-            'status' => 'required|in:available,occupied,maintenance'
+        $request->validate([
+            'roomNumber' => 'required|unique:rooms',
+            'type' => 'required',
+            'capacity' => 'required|integer',
+            'pricePerNight' => 'required|numeric',
         ]);
 
-        Room::create($validated);
-        return redirect()->route('rooms.index')
-            ->with('success', 'Room added successfully!');
+        Room::create($request->all());
+        return redirect()->route('rooms.index')->with('success', 'Room added successfully!');
+    }
+
+    public function edit(Room $room)
+    {
+        return view('rooms.edit', compact('room'));
+    }
+
+    public function update(Request $request, Room $room)
+    {
+        $request->validate([
+            'roomNumber' => 'required|unique:rooms,roomNumber,' . $room->id,
+            'type' => 'required',
+            'capacity' => 'required|integer',
+            'pricePerNight' => 'required|numeric',
+        ]);
+
+        $room->update($request->all());
+        return redirect()->route('rooms.index')->with('success', 'Room updated successfully!');
+    }
+
+    public function destroy(Room $room)
+    {
+        $room->delete();
+        return redirect()->route('rooms.index')->with('success', 'Room deleted successfully!');
     }
 }
+
 ```
 
 ---
@@ -315,24 +339,31 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
-    {
-        Schema::create('rooms', function (Blueprint $table) {
-            $table->id();
-            $table->string('room_number')->unique();
-            $table->string('room_type');
-            $table->decimal('price', 8, 2);
-            $table->enum('status', ['available', 'occupied', 'maintenance'])
-                  ->default('available');
-            $table->timestamps();
-        });
-    }
+{
+    Schema::create('rooms', function (Blueprint $table) {
+        $table->id();
+        $table->string('roomNumber')->unique();
+        $table->string('type');
+        $table->string('status')->default('Available'); // Available / Occupied
+        $table->timestamps();
+    });
+}
 
+
+
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::dropIfExists('rooms');
     }
 };
+
 ```
 
 ---
@@ -349,26 +380,34 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
-    {
-        Schema::create('reservations', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('room_id')->constrained()->onDelete('cascade');
-            $table->string('guest_name');
-            $table->string('guest_email');
-            $table->date('check_in_date');
-            $table->date('check_out_date');
-            $table->enum('status', ['pending', 'confirmed', 'cancelled'])
-                  ->default('pending');
-            $table->timestamps();
-        });
-    }
+{
+    Schema::create('reservations', function (Blueprint $table) {
+        $table->id();
+        $table->foreignId('room_id')->constrained('rooms')->onDelete('cascade');
+        $table->string('guestName');
+        $table->string('guestEmail');
+        $table->date('checkInDate');
+        $table->date('checkOutDate');
+        $table->timestamps();
+    });
+}
 
+
+
+
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::dropIfExists('reservations');
     }
 };
+
 ```
 
 ---
@@ -385,22 +424,22 @@ return new class extends Migration
 
 ## 🤝 Contributors
 
-- **Full Name:** DANIEL EZEKIEL M. DUCUSIN
-- **Student ID:** 221-0145-2
+- **Full Name:** Tiffany Kyle Olivar
+- **Student ID:** 221-0123-2
 - **Section:** 4-B
 
 ---
 
 ## 📝 License
 
-This project is developed for educational purposes as part of a midterm project requirement.
+This project is developed for educational purposes as part of a midterm project requirement and an activity for final term.
 
 ---
 
 ## 📞 Contact
 
 For questions or feedback, please contact:
-- **Email:** [your-email@example.com]
+- **Email:** [otiffanykyle@gmail.com]
 - **GitHub:** [https://github.com/tiffanyk22](https://github.com/tiffanyk22)
 
 ---
